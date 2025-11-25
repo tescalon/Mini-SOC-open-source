@@ -1,5 +1,9 @@
 # 🛡️ Déploiement d'un SOC Open Source Pédagogique (LAB CYBER)
 
+[![Statut du Projet](https://img.shields.io/badge/Statut-En%20Cours-orange)](./documentation/objectifs.md)
+[![Technologies Principales](https://img.shields.io/badge/Tech-SIEM%20(ELK)%2C%20CTI%20(OpenCTI)%2C%20SOAR%20(TheHive%2FCortex)-blue)](./documentation/architecture.md)
+[![Focus Technique](https://img.shields.io/badge/Focus-Cybers%C3%A9curit%C3%A9%20Avanc%C3%A9-red)](./documentation/rapport_technique.md)
+
 ## 🎯 Objectif du Projet
 
 Ce projet vise à mettre en place une **chaîne complète de gestion des événements de sécurité** (SIEM, SOAR et Threat Intelligence) en environnement de laboratoire. L'objectif est de simuler les fonctions d'un **SOC léger** pour la détection, la corrélation et l'investigation des menaces (Brute Force, Scans, etc.) dans un cadre pédagogique et non-productif.
