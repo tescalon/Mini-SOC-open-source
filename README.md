@@ -25,10 +25,10 @@ Le laboratoire est segmenté en trois zones principales pour isoler les composan
 | Élément | Rôle | Adresse IP | Sous-réseau | Notes |
 | :--- | :--- | :--- | :--- | :--- |
 | **Box Internet** | Routeur/Passerelle vers le WAN | `192.168.1.XX` | `/24` | Accès Internet pour Kali et la box du lab. |
-| **PC A (Hôte VMware)** | Hôte de tous les services SOC (Docker) | `192.168.10.1` | `/24` (LAN OPNsense) | Serveur des composants Wazuh, TheHive, Cortex, OpenCTI. |
+| **PC A (Hôte VMware)** | Hôte de tous les services SOC (Docker) | `192.168.10.2` | `/24` (LAN OPNsense) | Serveur des composants Wazuh, TheHive, Cortex, OpenCTI. |
 | **OPNsense (WAN)** | Point d'entrée de la zone protégée | `192.168.1.X` | `/24` | Se connecte au même segment que la Box. |
 | **OPNsense (LAN)** | Pare-feu de la zone cible | `192.168.10.1` | `/24` | Passerelle de tous les PC protégés. |
-| **PC B (Debian Cible)** | Système d'information protégé | `192.168.10.Y` | `/24` | Équipé d'un agent Wazuh pour la collecte de logs. |
+| **PC B (Debian Cible)** | Système d'information protégé | `192.168.10.3` | `/24` | Équipé d'un agent Wazuh pour la collecte de logs. |
 | **Kali Attaquant** | Machine simulant les menaces (externe) | IP publique ou NAT | N/A | Simule des attaques provenant d'Internet. |
 
 ---
@@ -39,11 +39,11 @@ L'ensemble de la plateforme SOC est déployé et orchestré via **Docker/Docker-
 
 | Composant | Rôle Sécurité | Fonctionnalités Clés |
 | :--- | :--- | :--- |
-| **OPNsense + Suricata** | **Firewall & IDS/IPS** | Séparation des zones, filtrage de flux (ACL), **détection d'intrusion (Suricata)**. |
+| **OPNsense + Suricata** | **Firewall & IDS/IPS** | Séparation des zones, filtrage de flux (ACL), détection d'intrusion (Suricata). |
 | **Wazuh** | **SIEM / Corrélation** | Collecte centralisée des logs (Système, applicatif), détection d'anomalies, corrélation des événements (ex: tentatives SSH/RDP multiples). |
 | **TheHive** | **Gestion d'Incidents (SOAR léger)** | Plateforme collaborative pour l'investigation, gestion du workflow des alertes, ticketing et documentation. |
 | **Cortex** | **Enrichissement & Analyse** | Moteur d'exécution des *Analyzers* (ex: VirusTotal, Shodan, Whois) pour enrichir les observations d'incidents transmises par TheHive. |
-| **OpenCTI** | **Threat Intelligence (CTI)** | Centralisation et visualisation des **IOCs (Indicators of Compromise)**, cartographie de la menace via le framework MITRE ATT&CK. |
+| **OpenCTI** | **Threat Intelligence (CTI)** | Centralisation et visualisation des IOCs (Indicators of Compromise), cartographie de la menace via le framework MITRE ATT&CK. |
 | **Docker / Portainer** | **Orchestration & Administration** | Déploiement rapide et gestion des conteneurs pour garantir l'homogénéité de l'environnement applicatif. |
 
 ---
