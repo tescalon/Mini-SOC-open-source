@@ -1,67 +1,93 @@
 # 🛡️ Déploiement d'un SOC Open Source Pédagogique (LAB CYBER)
 
 [![Statut du Projet](https://img.shields.io/badge/Statut-En%20Cours-orange)](./documentation/objectifs.md)
-[![Technologies Principales](https://img.shields.io/badge/Tech-SIEM%20(ELK)%2C%20CTI%20(OpenCTI)%2C%20SOAR%20(TheHive%2FCortex)-blue)](./documentation/architecture.md)
+[![Technologies Principales](https://img.shields.io/badge/Tech-SIEM%20(ELK)%2C%20MISP%20%2C%20SOAR%20(TheHive%2FCortex)-blue)](./documentation/architecture.md)
 [![Focus Technique](https://img.shields.io/badge/Focus-Cybers%C3%A9curit%C3%A9%20Avanc%C3%A9-red)](./documentation/rapport_technique.md)
 
-## 🎯 Objectif du Projet
 
-Ce projet vise à mettre en place une **chaîne complète de gestion des événements de sécurité** (SIEM, SOAR et Threat Intelligence) en environnement de laboratoire. L'objectif est de simuler les fonctions d'un **SOC léger** pour la détection, la corrélation et l'investigation des menaces (Brute Force, Scans, etc.) dans un cadre pédagogique et non-productif.
+## 🎯 Executive Summary
 
-Ce lab permet de maîtriser l'intégration de solutions Open Source, de pratiquer la réponse aux incidents (IR - Incident Response) et d'appliquer les principes du **GRC (Gouvernance, Risque et Conformité)** en matière de sécurité des systèmes d'information.
+Ce projet vise à concevoir et opérer une chaîne de sécurité défensive (Blue Team) complète dans un environnement contraint. L'objectif est de simuler un **SOC d'entreprise** capable de traiter un incident de bout en bout : de la détection d'une anomalie réseau à l'enrichissement via Threat Intelligence.
 
----
-
-## 🗺️ Architecture Fonctionnelle du LAB
-
-Le laboratoire est segmenté en trois zones principales pour isoler les composants : Internet (Zone Rouge), la Zone d'Administration/Gestion (Zone Jaune) et la Zone Protégée (Zone Verte).
-
-### ➡️ Schéma d'Architecture
-
-
-
-### ➡️ Composants Réseau et Adressage (Niveau 3)
-
-| Élément | Rôle | Adresse IP | Sous-réseau | Notes |
-| :--- | :--- | :--- | :--- | :--- |
-| **Box Internet** | Routeur/Passerelle vers le WAN | `192.168.1.XX` | `/24` | Accès Internet pour Kali et la box du lab. |
-| **PC A (Hôte VMware)** | Hôte de tous les services SOC (Docker) | `192.168.10.2` | `/24` (LAN OPNsense) | Serveur des composants Wazuh, TheHive, Cortex, OpenCTI. |
-| **OPNsense (WAN)** | Point d'entrée de la zone protégée | `192.168.1.X` | `/24` | Se connecte au même segment que la Box. |
-| **OPNsense (LAN)** | Pare-feu de la zone cible | `192.168.10.1` | `/24` | Passerelle de tous les PC protégés. |
-| **PC B (Debian Cible)** | Système d'information protégé | `192.168.10.3` | `/24` | Équipé d'un agent Wazuh pour la collecte de logs. |
-| **Kali Attaquant** | Machine simulant les menaces (externe) | IP publique ou NAT | N/A | Simule des attaques provenant d'Internet. |
+L'infrastructure repose sur une architecture **distribuée et conteneurisée**, répondant à des exigences strictes de gestion de ressources (Capacity Planning sur 2 nœuds physiques de 16Go RAM).
 
 ---
 
-## 🛠️ Stack Technologique (Composants Clés du SOC)
+## 🔄 Operational Workflow (Flux de Données)
 
-L'ensemble de la plateforme SOC est déployé et orchestré via **Docker/Docker-Compose** sur le **PC A (Hôte VMware)** pour garantir une portabilité et une gestion simplifiée.
+Le laboratoire est conçu pour orchestrer le cycle de vie complet d'une alerte de sécurité.
 
-| Composant | Rôle Sécurité | Fonctionnalités Clés |
-| :--- | :--- | :--- |
-| **OPNsense + Suricata** | **Firewall & IDS/IPS** | Séparation des zones, filtrage de flux (ACL), détection d'intrusion (Suricata). |
-| **Wazuh** | **SIEM / Corrélation** | Collecte centralisée des logs (Système, applicatif), détection d'anomalies, corrélation des événements (ex: tentatives SSH/RDP multiples). |
-| **TheHive** | **Gestion d'Incidents (SOAR léger)** | Plateforme collaborative pour l'investigation, gestion du workflow des alertes, ticketing et documentation. |
-| **Cortex** | **Enrichissement & Analyse** | Moteur d'exécution des *Analyzers* (ex: VirusTotal, Shodan, Whois) pour enrichir les observations d'incidents transmises par TheHive. |
-| **OpenCTI** | **Threat Intelligence (CTI)** | Centralisation et visualisation des IOCs (Indicators of Compromise), cartographie de la menace via le framework MITRE ATT&CK. |
-| **Docker / Portainer** | **Orchestration & Administration** | Déploiement rapide et gestion des conteneurs pour garantir l'homogénéité de l'environnement applicatif. |
+![Architecture Schema](./assets/architecture-v2.png)
 
-<p align="center">
-<img width="650" src="https://github.com/tescalon/Mini-SOC-open-source/blob/main/Architecture%20r%C3%A9elle.png" alt="Architecture réelle" />
-</p>
+### 1. Phase de Menace (Zone Rouge)
+* **Vecteur :** Simulation d'attaques automatisées (Hydra, Nmap) via des conteneurs "Red Team".
+* **Cible :** Services vulnérables exposés volontairement dans une zone isolée (DMZ Docker).
+
+### 2. Phase de Détection (Zone Bleue - Nœud B)
+* **Collecte :** L'agent Wazuh remonte les logs systèmes et d'authentification en temps réel.
+* **Corrélation :** Le SIEM analyse les patterns (Règles XML) et génère une alerte de sécurité qualifiée.
+
+### 3. Phase de Réponse (Zone Intelligence - Nœud A)
+* **Escalade :** L'alerte est transmise via API au SOAR (TheHive).
+* **Enrichissement :** Interrogation automatique de MISP pour vérifier la réputation des IOCs (IP, Hash).
+* **Décision :** Prise en charge par l'analyste pour remédiation.
+
 ---
 
-## ✅ Compétences Démontrées
+## 🏗️ Infrastructure Design (Hardware & Stack)
 
-Ce projet couvre des aspects critiques de la Cybersécurité et du GRC, valorisant les compétences suivantes pour une alternance en Bac+5 :
+Pour pallier les limitations matérielles, les services sont répartis selon leur profil de consommation (CPU-bound vs I/O-bound).
 
-* **Architecture Sécurité :** Maîtrise de la segmentation réseau (LAN/WAN) et du rôle des firewalls/IDS/IPS.
-* **Administration Système :** Déploiement et gestion d'environnements virtualisés (VMware) et conteneurisés (Docker).
-* **Opérations de Sécurité (SecOps) :** Configuration d'agents de collecte (Wazuh Agents), corrélation de logs et gestion des faux positifs.
-* **Gestion des Incidents :** Utilisation des plateformes TheHive et Cortex pour l'investigation structurée et la prise de décision.
-* **Threat Intelligence :** Intégration et utilisation de la CTI via OpenCTI pour contextualiser les attaques.
+| Nœud Physique | Rôle GRC | Stack Technologique | Justification |
+| :--- | :--- | :--- | :--- |
+| **PC A (Intel i7)** | **Intelligence Node** | `TheHive 5`, `Cortex`, `MISP`, `Elastic` | Hôte dédié aux traitements analytiques lourds (Java Heap intensive). |
+| **PC B (Intel i5)** | **Detection Front** | `Wazuh`, `OPNsense`, `Kali` | Hôte dédié à l'ingestion de flux et au routage réseau. |
 
-Ce lab sert de base pour l'étude et l'application des procédures de sécurité, un pilier essentiel pour un métier dans la cybersécurité ( que ça soit dans la sécurité défensive ou la GRC).
+---
+
+## 📸 Evidence & Reporting
+
+Les captures ci-dessous illustrent le traitement d'un scénario "Brute Force SSH".
+
+| SIEM Dashboard (Wazuh) | Incident Management (TheHive) |
+| :---: | :---: |
+| ![Wazuh](./assets/dashboard-wazuh.png) | ![TheHive](./assets/alert-thehive.png) |
+| *Visualisation des pics d'attaques* | *Ticket généré automatiquement* |
+
+---
+
+## 🚀 Getting Started
+
+L'installation est automatisée via Docker Compose, mais nécessite une configuration réseau préalable.
+
+### Pré-requis
+* 2x Hôtes Linux (Ubuntu Server 22.04 LTS recommandé)
+* IP Statiques configurées : `192.168.1.50` (Node A) et `192.168.1.51` (Node B)
+* Tuning Sysctl : `vm.max_map_count=262144`
+
+### Installation Rapide
+
+**1. Déploiement du Nœud Frontal (PC B)**
+```bash
+git clone https://github.com/TON-USER/LAB-SOC-DIST-01.git
+cd LAB-SOC-DIST-01/node-detection-i5
+docker compose up -d
+```
+
+**2. Déploiement du Nœud Intelligence (PC A)**
+```bash
+cd ../node-intelligence-i7
+docker compose up -d
+```
+
+*(Consulter le dossier `/docs` pour le guide d'intégration API complet)*
+
+---
+
+## 💡 Compétences Validées
+* **Architecture :** Conception distribuée et segmentation réseau.
+* **SecOps :** Maîtrise de la chaîne Wazuh / TheHive / MISP.
+* **Ingénierie :** Optimisation Docker et gestion des ressources systèmes.
 
 ---
 
